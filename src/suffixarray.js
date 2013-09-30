@@ -66,18 +66,18 @@ Zlib.SuffixArray.prototype.bwt = function() {
   return bwt;
 };
 
-  /**
-   * SA-IS 実装本体
-   * この実装では文字列の終わりを表す記号 $ を省略して実装してある.
-   *
-   * @param {(Array.<number>|Uint8Array|Int32Array)} input Suffix Array の元となる入力.
-   * @param {number} offset 入力の開始位置.
-   * @param {number} length 入力の長さ.
-   * @param {(Array.<number>|Int32Array)} bucket Suffix Array 兼 計算領域.
-   * @param {number} numberOfSymbols 出現するシンボルの個数.
-   * @return {(Array.<number>|Int32Array)}
-   * @private
-   */
+/**
+ * SA-IS 実装本体
+ * この実装では文字列の終わりを表す記号 $ を省略して実装してある.
+ *
+ * @param {(Array.<number>|Uint8Array|Int32Array)} input Suffix Array の元となる入力.
+ * @param {number} offset 入力の開始位置.
+ * @param {number} length 入力の長さ.
+ * @param {(Array.<number>|Int32Array)} bucket Suffix Array 兼 計算領域.
+ * @param {number} numberOfSymbols 出現するシンボルの個数.
+ * @return {(Array.<number>|Int32Array)}
+ * @private
+ */
 Zlib.SuffixArray.prototype.sais_ = function(input, offset, length, bucket, numberOfSymbols) {
   var suffixType = new (USE_TYPEDARRAY ? Uint8Array : Array)(length);
   // Start, End, Left, Right
