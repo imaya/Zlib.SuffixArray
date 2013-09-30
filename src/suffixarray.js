@@ -13,9 +13,13 @@ goog.scope(function() {
 Zlib.SuffixArray = function(input, opt_params) {
   opt_params = opt_params || {};
 
+  /** @type {!(Array.<number>|Uint8Array)} */
   this.input = input;
+  /** @type {number} */
   this.numberOfSymbols = 'numberOfSymbols' in opt_params ?
     opt_params['numberOfSymbols'] : Zlib.SuffixArray.NumberOfSymbols;
+  /** @type {(Array.<number>|Int32Array)} */
+  this.suffixArray;
 };
 
 /**
@@ -33,7 +37,7 @@ Zlib.SuffixArray.Type = {
 Zlib.SuffixArray.NumberOfSymbols = 256;
 
 /**
- *
+ * construct Suffix Array
  * @return {(Array.<number>|Int32Array)}
  */
 Zlib.SuffixArray.prototype.construct = function() {
@@ -43,7 +47,23 @@ Zlib.SuffixArray.prototype.construct = function() {
   var bucket =
     new (USE_TYPEDARRAY ? Int32Array : Array)(length);
 
-  return this.sais_(this.input, 0, length, bucket, this.numberOfSymbols);
+  return this.suffixArray =
+    this.sais_(this.input, 0, length, bucket, this.numberOfSymbols);
+};
+
+Zlib.SuffixArray.prototype.bwt = function() {
+  /** @type {Array.<number>|Int32Array} */
+  var suffixArray = this.suffixArray || this.construct();
+  var length = suffixArray.length;
+  var bwt = new (USE_TYPEDARRAY ? Uint8Array : Array)(length);
+  var input = this.input;
+  var i;
+
+  for (i = 0; i < length; ++i) {
+    bwt[i] = suffixArray[i] === 0 ? input[length - 1] : input[suffixArray[i] - 1];
+  }
+
+  return bwt;
 };
 
   /**
