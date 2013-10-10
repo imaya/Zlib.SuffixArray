@@ -66,6 +66,41 @@ Zlib.SuffixArray.prototype.bwt = function() {
   return bwt;
 };
 
+Zlib.SuffixArray.prototype.decodeBWT = function(encoded, numberOfSymbols) {
+  var n = encoded.length;
+  var decoded = new (USE_TYPEDARRAY ? Uint8Array : Array)(n);
+  var count = new (USE_TYPEDARRAY ? Uint32Array : Array)(numberOfSymbols); // Fの情報を累積頻度で持つ
+  var lf = new (USE_TYPEDARRAY ? Uint32Array : Array)(n); // シンボル数が256の時は Uint8Array でも良さそう
+  var i;
+  var next = -1;
+
+  // 出現頻度の取得
+  for (i = 0; i < n; ++i) {
+    if (encoded[i] === 0) {
+      next = i;
+    }
+    ++count[encoded[i]];
+  }
+
+  // 出現頻度を先頭からの合計値にする
+  for (i = 1; i < numberOfSymbols; i++) {
+    count[i] += count[i-1];
+  }
+
+  // LF map
+  for (i = n-1; i >= 0; i--) {
+    lf[--count[encoded[i]]] = i;
+  }
+
+  // LF map を用いて BWT をデコードする
+  for (i = 0; i < n; i++){
+    next = lf[next];
+    decoded[i] = encoded[next];
+  }
+
+  return decoded;
+};
+
 /**
  * SA-IS 実装本体
  * この実装では文字列の終わりを表す記号 $ を省略して実装してある.
