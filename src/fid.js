@@ -216,12 +216,13 @@ Algorithm.FID.prototype.select = function(n, bit) {
 
   left = left * largeBlockSize / smallBlockSize;
   right = left + largeBlockSize / smallBlockSize;
+  var basePoint = left;
 
   while (left < right) {
     tmp = (left + right) / 2 | 0;
     rank = lbValue + (
       bit === 0 ?
-      tmp * smallBlockSize - smallBlocks[tmp] :
+        (tmp - basePoint) * smallBlockSize - smallBlocks[tmp] :
       smallBlocks[tmp]
     );
 
@@ -232,11 +233,63 @@ Algorithm.FID.prototype.select = function(n, bit) {
     }
   }
   --left;
+  var sbValue = rank;
 
-  console.log(rank);
+  /*
+  console.log("Small Block Index:", left);
+  console.log("Current Rank:", sbValue);
+  console.log("Current Bit Index:", left * smallBlockSize);
+  console.log("Inner Select:", this.select_(left, n - sbValue, bit))
+  */
+  //return left * smallBlockSize + this.select_(left, n - sbValue, bit);
+  return left * smallBlockSize +
+    this.select32((
+      (input[left  ]      ) +
+      (input[left+1] <<  8) +
+      (input[left+2] << 16) +
+      (input[left+3] << 24)
+    ), n - sbValue, bit);
 };
 
-Algorithm.FID.select_ = function(index, n, bit) {
+Algorithm.FID.prototype.select32 = function(block, index, bit) {
+  var block1;
+  var block2;
+  var block3;
+  var block4;
+  var value0;
+  var value1;
+  var value2;
+  var value3;
+  var value4;
+  var count = 0;
+
+  if (bit === 0) {
+    block = ~block;
+  }
+
+  ++index;
+
+  block1 = ((block  & 0xaaaaaaaa) >> 1) + (block  & 0x55555555);
+  block2 = ((block1 & 0xcccccccc) >> 2) + (block1 & 0x33333333);
+  block3 = ((block2 & 0xf0f0f0f0) >> 4) + (block2 & 0x0f0f0f0f);
+  block4 = ((block3 & 0xff00ff00) >> 8) + (block3 & 0x00ff00ff);
+
+  value4 = (block4 >> count) & 0x0000ffff;
+  if (index > value4) { index -= value4; count += 16; }
+  value3 = (block3 >> count) & 0x000000ff;
+  if (index > value3) { index -= value3; count +=  8; }
+  value2 = (block2 >> count) & 0x0000000f;
+  if (index > value2) { index -= value2; count +=  4; }
+  value1 = (block1 >> count) & 0x00000003;
+  if (index > value1) { index -= value1; count +=  2; }
+  value0 = (block  >> count) & 0x00000001;
+  if (index > value0) { index -= value0; count +=  1; }
+
+  return count;
+};
+
+/*
+Algorithm.FID.prototype.select_ = function(index, n, bit) {
   var input = this.input;
   var octet;
   var pos = 0;
@@ -255,6 +308,10 @@ Algorithm.FID.select_ = function(index, n, bit) {
       currentRank += table[octet];
     } else {
       for (i = 0; i < 8; ++i) {
+        if ((octet & 1) === 1) {
+          ++currentRank;
+        }
+        octet >>>= 1;
         if (currentRank === n) {
           return pos * 8 + i;
         }
@@ -263,7 +320,10 @@ Algorithm.FID.select_ = function(index, n, bit) {
 
     ++pos;
   }
+
+  throw new Error('select operation failure');
 };
+*/
 
 /**
  * @param {number} n
