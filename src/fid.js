@@ -172,6 +172,21 @@ Algorithm.FID.createRankTable_ = function() {
 
 Algorithm.FID.RankTable = Algorithm.FID.createRankTable_();
 
+Algorithm.FID.prototype.set = function(index, bit) {
+  if (bit === 0) {
+    this.input[index / 8 | 0] &= ~(1 << (index % 8));
+  } else {
+    this.input[index / 8 | 0] |= (1 << (index % 8));
+  }
+};
+
+Algorithm.FID.prototype.get = function(index) {
+  return (
+    (this.input[index / 8 | 0] >>> index % 8) & 1
+  );
+};
+
+
 Algorithm.FID.prototype.select = function(n, bit) {
   /** @type {Array.<number>|Uint8Array} */
   var input = this.input;
